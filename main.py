@@ -28,7 +28,7 @@ async def main():
         sleep(1.5)
 
         iteration += 1
-        cprint(f"[LOG]: Job {iteration} of {len(ids)}", "magenta")
+        cprint(f"[LOG]: Handling job {iteration} of {len(ids)}...", "magenta")
 
         response = await getDataById(id)
         result = unpackList(response)
