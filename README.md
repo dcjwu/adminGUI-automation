@@ -1,5 +1,4 @@
-```shell
-pip install -r requirements.txt
+```bash
+pipenv install
+pipenv run python main.py
 ```
-
-
