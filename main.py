@@ -76,3 +76,9 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+'''
+    1. CI to generate requirements;
+    2. Dockerize;
+    3. Tests?
+'''
