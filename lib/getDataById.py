@@ -2,6 +2,8 @@ import aiohttp
 
 from termcolor import cprint
 
+from lib.sendErrorMessage import sendErrorMessage
+
 from env import apiUrl      
 
 async def getDataById(uuid):
@@ -11,12 +13,6 @@ async def getDataById(uuid):
                 return await result.json()
 
         except Exception as e:
-            cprint(f"[ERROR] getDataById: {e}", "red")
+            cprint(f"[ERROR] in getDataById: {e}", "red")
+            await sendErrorMessage(f"[ERROR] in getDataById: {e}")
             return
-
-def unpackList(item):
-    try:
-        return item[0]
-    except Exception as e:
-        cprint(f"[ERROR] unpackList: {e}", "red")
-        return
