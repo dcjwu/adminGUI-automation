@@ -10,6 +10,7 @@ asyncstdlib = "*"
 aiohttp = "*"
 asyncio = "*"
 inquirer = "*"
+beautifulsoup4 = "*"
 
 [dev-packages]
 
