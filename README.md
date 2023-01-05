@@ -4,3 +4,6 @@ __January 2023.__ First python experience.
 pipenv install
 pipenv run python main.py
 ```
+
+
+#### Status — IN PROGRESS.
