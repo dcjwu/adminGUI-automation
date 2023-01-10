@@ -17,9 +17,6 @@ class GoogleSheets:
             sheet = self.client.open_by_key(self.key).sheet1
             Logger.log(LoggerType.LOG, f"Connected to Google Sheet {self.key}.")
             self.sheet = sheet
-        except HttpError:
-            Logger.log(LoggerType.ERROR, "Google Sheet not found, please double check the ID.", "connect()")
-            sys.exit()
         except Exception as e:
             Logger.log(LoggerType.ERROR, f"Unable to connect to Google Sheet, {e}.", "connect()")
             sys.exit()

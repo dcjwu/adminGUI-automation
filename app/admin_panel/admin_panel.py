@@ -36,7 +36,6 @@ class AdminPanel:
         q = [inquirer.List("admin_url", message="Please, choose URL", choices=list(admin_mapping.keys()))]
         a = inquirer.prompt(q)
         self.admin_url = a["admin_url"]
-        return a["admin_url"]
 
     async def get_auth_token(self):
         self.auth_url = admin_mapping[self.admin_url]["auth_url"]
