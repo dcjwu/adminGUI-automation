@@ -1,121 +1,58 @@
-import os
-import sys
-import pygsheets
 import asyncio
-import inquirer
+import os
 import aiohttp
 
-from termcolor import cprint
-from time import sleep
-from bs4 import BeautifulSoup
+from app.telegram.telegram import Telegram
+from app.logger.logger import Logger, LoggerType
+from app.google_sheets.google_sheets import GoogleSheets
+from app.admin_panel.admin_panel import AdminPanel
 
-from asyncstdlib.builtins import map as amap
-from asyncstdlib.builtins import list as alist
+tg = Telegram(os.getenv("TG_TOKEN"), os.getenv("TG_CHAT"))
 
-from utils.unpackList import unpackList
-from utils.sendErrorMessage import sendErrorMessage
-from utils.multipartify import multipartify
-
-from admin.isAuth import isAuth
 
 async def main():
-    googleSheetsClient = pygsheets.authorize()
+    key = input("Please, enter Google Sheet ID: ")
 
-    ssKey = input("Please, add Google Sheet ID: ")
-    
-    try:
-        sheet = googleSheetsClient.open_by_key(ssKey).sheet1
-        cprint(f"[LOG]: Connected to Google Sheet {ssKey}", "magenta")
-    except Exception as e:
-        cprint(f"[ERROR] in main(): Unable to connect to Google Sheet: {e}", "red")
-        sys.exit()
+    gs = GoogleSheets(key)
+    gs.connect()
 
-    columnA = sheet.get_values("A", "A")
-    del columnA[0]
+    while True:
+        column = input("Please, enter column letter: ").upper()
+        if len(column) != 1:
+            Logger.log(LoggerType.WARN, "Column should be one character.")
+            continue
+        if not column.isalpha():
+            Logger.log(LoggerType.WARN, "Column can contain only letters.")
+            continue
+        else:
+            break
 
-    ids = await alist(amap(unpackList, columnA))
-    cprint(f"[LOG]: SUCCESS, Got {len(ids)} values from column A", "magenta")
+    [count, values] = gs.get_values(column)
+    Logger.log(LoggerType.LOG, f"Got {count} values from column {column}.")
+    if count != len(values):
+        Logger.log(LoggerType.WARN, "It seems like some rows in the column are empty.")
 
-    url1 = os.getenv("URL_1")
-    url2 = os.getenv("URL_2")
-    options = [url1, url2]
-    questions = [
-        inquirer.List("url",
-        message="Please, choose admin URL",
-        choices=options)
-    ]
-    answers = inquirer.prompt(questions)
-    adminUrl = answers["url"]
+    admin = AdminPanel(aiohttp.ClientSession())
+    admin.get_url()
 
-    authUrl = None
+    Logger.log(LoggerType.LOG, "Logging in, please wait...")
 
-    if adminUrl == os.getenv("URL_1"):
-        authUrl = os.getenv("AUTH_1")
-    elif adminUrl == os.getenv("URL_2"):
-        authUrl = os.getenv("AUTH_2")
-    else:
-        raise Exception("ERROR, please try again or contact Admin.")
+    await admin.get_auth_token()
+    await admin.login()
 
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.get(authUrl) as result:
-                html = await result.text()
-                soup = BeautifulSoup(html, 'html.parser')
-                token = soup.find("input", {"name": "authenticity_token"}).get("value")
+    # TODO:
 
-        except Exception as e:
-            cprint(f"[ERROR] getting auth token(), please contact Admin: {e}", "red")
-            return
-
-        try:
-            user = None
-            password = None
-
-            if adminUrl == os.getenv("URL_1"):
-                user = os.getenv("USERNAME_1")
-                password = os.getenv("PASS_1")
-
-            elif adminUrl == os.getenv("URL_2"):
-                user = os.getenv("USERNAME_2")
-                password = os.getenv("PASS_2")
-
-            payload = {
-                "authenticity_token": token,
-                "user": {
-                    "email": user,
-                    "password": password,
-                    "otp_attempt": ""
-                },
-                "password": {
-                    "visibility": "0"
-                },
-                "Commit": "Sign In"
-            }
-
-            async with session.post(authUrl, data=multipartify(payload)) as result:
-                html = await result.text()
-                authorized = isAuth(html)
-
-                if (authorized):
-                    cprint(f"[LOG] SUCESS, Authorized to admin panel", "magenta")
-                else:
-                    cprint(f"[ERROR] in attemptLogin(), Unable to authorize to admin panel. Please, contact Admin", "red")
-                    sys.exit()
-
-        except Exception as e:
-            cprint(f"[ERROR] in login flow: Seems like wrong credentials: {e}", "red")
-
-        try:
-            async with session.get(f"{adminUrl}?uid=5fe6b7ec-f855-4561-9191-1104bbfb5d5c") as result:
-                print(await result.text())
-
-        except Exception as e:
-            cprint(f"[ERROR] in getDataById(): {e}", "red")
-            await sendErrorMessage(f"[ERROR] getting data by id: {e}")
-            sys.exit()
+    # try:
+    #     async with session.get(f"{adminUrl}?uid=5fe6b7ec-f855-4561-9191-1104bbfb5d5c") as result:
+    #         print(await result.text())
+    #
+    # except Exception as e:
+    #     cprint(f"[ERROR] in getDataById(): {e}", "red")
+    #     await sendErrorMessage(f"[ERROR] getting data by id: {e}")
+    #     sys.exit()
 
     # print(await getDataById(adminUrl, creds[1]), "SUCCESS")
-    
+
     # iteration = 0
     # nameValue = None
     # idValue = None
@@ -149,11 +86,6 @@ async def main():
     #         cprint(f"[ERROR] in main(): Unable to set data to Google Sheets: {e}. TX: {id}", "red")
     #         await sendErrorMessage(f"[ERROR] in main(): Unable to set data to Google Sheets: {e}\n TX: {id}")
 
+
 if __name__ == "__main__":
     asyncio.run(main())
-
-'''
-    1. CI to generate requirements;
-    2. Dockerize;
-    3. Tests?
-'''

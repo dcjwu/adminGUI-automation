@@ -6,11 +6,12 @@ name = "pypi"
 [packages]
 pygsheets = "*"
 termcolor = "*"
-asyncstdlib = "*"
 aiohttp = "*"
+asyncstdlib = "*"
 asyncio = "*"
 inquirer = "*"
 beautifulsoup4 = "*"
+requests = "*"
 
 [dev-packages]
 
