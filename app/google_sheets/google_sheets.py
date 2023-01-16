@@ -1,6 +1,5 @@
 import sys
 
-from googleapiclient.errors import HttpError
 from pygsheets import authorize
 
 from app.logger.logger import Logger, LoggerType
@@ -17,9 +16,10 @@ class GoogleSheets:
             sheet = self.client.open_by_key(self.key).sheet1
             Logger.log(LoggerType.LOG, f"Connected to Google Sheet {self.key}.")
             self.sheet = sheet
+
         except Exception as e:
             Logger.log(LoggerType.ERROR, f"Unable to connect to Google Sheet, {e}.", "connect()")
-            sys.exit()
+            sys.exit() 
 
     def get_values(self, column):
         values = self.sheet.get_values(column, column)
@@ -33,7 +33,8 @@ class GoogleSheets:
             Logger.log(LoggerType.ERROR, f"No data found in column {column}.", "get_values()")
             sys.exit()
         else:
-            return len(real_values), unpacked_values
+            del unpacked_values[0]
+            return (len(real_values)-1), unpacked_values
 
     @staticmethod
     def _count_values(values):
