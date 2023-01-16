@@ -1,6 +1,7 @@
 import asyncio
 import os
 import aiohttp
+import requests
 
 from app.telegram.telegram import Telegram
 from app.logger.logger import Logger, LoggerType
@@ -31,7 +32,7 @@ async def main():
     Logger.log(LoggerType.LOG, f"Got {count} values from column {column}.")
     if count != len(values):
         Logger.log(LoggerType.WARN, "It seems like some rows in the column are empty.")
-
+    #
     admin = AdminPanel(aiohttp.ClientSession())
     admin.get_url()
 
@@ -39,6 +40,11 @@ async def main():
 
     await admin.get_auth_token()
     await admin.login()
+
+    for index, uid in enumerate(values):
+        Logger.log(LoggerType.LOG, f"Handling job {index + 1} of {len(values)}...")
+        return_url = await admin.get_return_url(uid)
+        await admin.get_redirects(return_url)
 
     # TODO:
 
