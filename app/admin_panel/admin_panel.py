@@ -131,6 +131,9 @@ class AdminPanel:
                 Logger.log(LoggerType.LOG, f"Redirect flow: {' >> '.join(self.redirect_list)}")
                 return self.redirect_list
 
+    async def disconnect(self):
+        await self.session.close()
+
     @staticmethod
     def _is_auth(html):
         soup = BeautifulSoup(html, "html.parser")

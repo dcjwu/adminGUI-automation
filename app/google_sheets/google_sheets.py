@@ -10,6 +10,7 @@ class GoogleSheets:
         self.client = authorize()
         self.key = key
         self.sheet = None
+        self.output_column = None
 
     def connect(self):
         try:
@@ -19,7 +20,11 @@ class GoogleSheets:
 
         except Exception as e:
             Logger.log(LoggerType.ERROR, f"Unable to connect to Google Sheet, {e}.", "connect()")
-            sys.exit() 
+            sys.exit()
+
+    def get_destination_column(self):
+        column = self.user_input_column_handler("Please enter OUTPUT column letter: ")
+        self.output_column = column
 
     def get_values(self, column):
         values = self.sheet.get_values(column, column)
@@ -34,7 +39,31 @@ class GoogleSheets:
             sys.exit()
         else:
             del unpacked_values[0]
-            return (len(real_values)-1), unpacked_values
+            return (len(real_values) - 1), unpacked_values
+
+    def write_to_sheet(self, index, url_list):
+        if isinstance(url_list, list):
+            try:
+                self.sheet.update_values(f"{self.output_column}{index + 2}", [[url_list[-1]]])
+            except Exception as e:
+                Logger.log(
+                    LoggerType.ERROR,
+                    f"Unable to update column {self.output_column} on row {index + 2}, {e}.",
+                    "write_to_sheet()"
+                )
+
+    @staticmethod
+    def user_input_column_handler(message):
+        while True:
+            column = input(message).upper()
+            if len(column) != 1:
+                Logger.log(LoggerType.WARN, "Column should be one character.")
+                continue
+            if not column.isalpha():
+                Logger.log(LoggerType.WARN, "Column can contain only letters.")
+                continue
+            else:
+                return column
 
     @staticmethod
     def _count_values(values):
@@ -49,4 +78,3 @@ class GoogleSheets:
                 not_empty_values.append(val)
 
         return is_empty, not_empty_values
-

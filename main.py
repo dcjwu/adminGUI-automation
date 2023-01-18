@@ -1,7 +1,7 @@
 import asyncio
 import os
 import aiohttp
-import requests
+from datetime import datetime
 
 from app.telegram.telegram import Telegram
 from app.logger.logger import Logger, LoggerType
@@ -17,16 +17,10 @@ async def main():
     gs = GoogleSheets(key)
     gs.connect()
 
-    while True:
-        column = input("Please, enter column letter: ").upper()
-        if len(column) != 1:
-            Logger.log(LoggerType.WARN, "Column should be one character.")
-            continue
-        if not column.isalpha():
-            Logger.log(LoggerType.WARN, "Column can contain only letters.")
-            continue
-        else:
-            break
+    column = gs.user_input_column_handler("Please, enter INPUT column letter: ")
+    gs.get_destination_column()
+
+    program_start_time = datetime.now()
 
     [count, values] = gs.get_values(column)
     Logger.log(LoggerType.LOG, f"Got {count} values from column {column}.")
@@ -42,55 +36,14 @@ async def main():
     await admin.login()
 
     for index, uid in enumerate(values):
-        Logger.log(LoggerType.LOG, f"Handling job {index + 1} of {len(values)}...")
+        Logger.log(LoggerType.LOG, f"Handling job {index + 1} of {len(values)}...", None, True)
         return_url = await admin.get_return_url(uid)
-        await admin.get_redirects(return_url)
-
-    # TODO:
-
-    # try:
-    #     async with session.get(f"{adminUrl}?uid=5fe6b7ec-f855-4561-9191-1104bbfb5d5c") as result:
-    #         print(await result.text())
-    #
-    # except Exception as e:
-    #     cprint(f"[ERROR] in getDataById(): {e}", "red")
-    #     await sendErrorMessage(f"[ERROR] getting data by id: {e}")
-    #     sys.exit()
-
-    # print(await getDataById(adminUrl, creds[1]), "SUCCESS")
-
-    # iteration = 0
-    # nameValue = None
-    # idValue = None
-
-    # for index, id in enumerate(ids):
-    #     sleep(1.2)
-
-    #     iteration += 1
-    #     cprint(f"[LOG]: Handling job {iteration} of {len(ids)}...", "magenta")
-
-    #     response = await getDataById(adminUrl, id)
-    #     result = await unpackList(response, id)
-
-    #     try:
-    #         nameValue = result["name"]
-    #     except:
-    #         nameValue = "Unable to get the name"
-    #         cprint(f"[ERROR] in main(): Unable to get the name. TX: {id}", "red")
-    #         await sendErrorMessage(f"[ERROR] in main(): Unable to get the name.\n TX: {id}")
-
-    #     try:
-    #         idValue = result["id"]
-    #     except:
-    #         idValue = "Unable to get the ID"
-    #         cprint(f"[ERROR] in main(): Unable to get the ID. TX: {id}", "red")
-    #         await sendErrorMessage(f"[ERROR] in main(): Unable to get the ID.\n TX: {id}")
-
-    #     try:
-    #         sheet.update_values(crange=f"B{index + 2}:C{index + 2}", values=[[nameValue, idValue]])
-    #     except Exception as e:
-    #         cprint(f"[ERROR] in main(): Unable to set data to Google Sheets: {e}. TX: {id}", "red")
-    #         await sendErrorMessage(f"[ERROR] in main(): Unable to set data to Google Sheets: {e}\n TX: {id}")
+        redirect_list = await admin.get_redirects(return_url)
+        gs.write_to_sheet(index, redirect_list)
+        if index+1 == len(values):
+            await admin.disconnect()
+            program_end_time = datetime.now()
+            Logger.log(LoggerType.WARN, "Program duration: {}".format(program_end_time - program_start_time), None, True)
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ logger_mapping = {
 class Logger:
 
     @staticmethod
-    def log(logger_type: LoggerType, message, fn_name=None):
+    def log(logger_type: LoggerType, message, fn_name=None, is_line_break=False):
         color = logger_mapping.get(logger_type)
         log_str = ""
 
@@ -30,6 +30,12 @@ class Logger:
             log_str = logger_type.value
 
         if logger_type == LoggerType.ERROR:
-            cprint(f"[{log_str}] in {fn_name}: {message}", color)
+            if is_line_break:
+                cprint(f"\n[{log_str}] in {fn_name}: {message}", color)
+            else:
+                cprint(f"[{log_str}] in {fn_name}: {message}", color)
         else:
-            cprint(f"[{log_str}]: {message}", color)
+            if is_line_break:
+                cprint(f"\n[{log_str}]: {message}", color)
+            else:
+                cprint(f"[{log_str}]: {message}", color)
