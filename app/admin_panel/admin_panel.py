@@ -15,7 +15,7 @@ from lib.multipartify import multipartify
 
 admin_mapping = {
     os.getenv("ADMIN_1_URL"): {
-        "auth_url": os.getenv("ADMIN_1_AUTH_URL"),
+        "auth_url": str(os.getenv("ADMIN_1_AUTH_URL")),
         "email": os.getenv("ADMIN_1_EMAIL"),
         "password": os.getenv("ADMIN_1_PASSWORD")
     },
@@ -138,7 +138,8 @@ class AdminPanel:
     def _is_auth(html):
         soup = BeautifulSoup(html, "html.parser")
         user = soup.find("span", {"class": "name"}).text
-        return user == os.getenv("USER")
+        # return f'"{user}"' == os.getenv("USR")
+        return user == os.getenv("USR")
 
     @staticmethod
     def _are_logs_available(html):

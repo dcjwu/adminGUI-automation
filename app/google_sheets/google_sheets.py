@@ -44,7 +44,11 @@ class GoogleSheets:
     def write_to_sheet(self, index, url_list):
         if isinstance(url_list, list):
             try:
-                self.sheet.update_values(f"{self.output_column}{index + 2}", [[url_list[-1]]])
+                final_column = self._get_letter(self.output_column, len(url_list) - 1)
+                self.sheet.update_values(
+                    f"{self.output_column}{index + 2}:{final_column}{index + 2}",
+                    [url_list]
+                )
             except Exception as e:
                 Logger.log(
                     LoggerType.ERROR,
@@ -78,3 +82,7 @@ class GoogleSheets:
                 not_empty_values.append(val)
 
         return is_empty, not_empty_values
+
+    @staticmethod
+    def _get_letter(letter, offset):
+        return chr((ord(letter.upper()) + offset - 65) % 26 + 65)

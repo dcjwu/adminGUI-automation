@@ -12,7 +12,6 @@ asyncio = "*"
 inquirer = "*"
 beautifulsoup4 = "*"
 requests = "*"
-urllib3 = "*"
 
 [dev-packages]
 
