@@ -10,6 +10,6 @@ run:
 start:
 	docker start -i script_container
 
-up: requirements build-image run
+up: build-image run
 
 .PHONY: requirements build-image run up
