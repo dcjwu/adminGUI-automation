@@ -106,7 +106,7 @@ class AdminPanel:
                     Logger.log(LoggerType.WARN, e)
 
         except Exception as e:
-            Logger.log(LoggerType.ERROR, f"Unable to get data for {uid}, {e}.", "get_return_url()")
+            Logger.log(LoggerType.WARN, f"Seems like no return url found for {uid}, {e}.", "get_return_url()")
 
     async def get_redirects(self, url):
         if url:
@@ -138,8 +138,8 @@ class AdminPanel:
     def _is_auth(html):
         soup = BeautifulSoup(html, "html.parser")
         user = soup.find("span", {"class": "name"}).text
-        # return f'"{user}"' == os.getenv("USR")
-        return user == os.getenv("USR")
+        return f'"{user}"' == os.getenv("USR")
+        # return user == os.getenv("USR")
 
     @staticmethod
     def _are_logs_available(html):
