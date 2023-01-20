@@ -106,7 +106,7 @@ class AdminPanel:
                     Logger.log(LoggerType.WARN, e)
 
         except Exception as e:
-            Logger.log(LoggerType.WARN, f"Seems like no return url found for {uid}, {e}.", "get_return_url()")
+            Logger.log(LoggerType.ERROR, f"Unable to get data for {uid}, {e}.", "get_return_url()")
 
     async def get_redirects(self, url):
         if url:
@@ -157,4 +157,4 @@ class AdminPanel:
             return url_value
 
         except Exception as e:
-            Logger.log(LoggerType.ERROR, f"Unable to get return url, {e}.", "_find_return_url_value()")
+            Logger.log(LoggerType.WARN, f"Seems like no return_url found, {e}.", "_find_return_url_value()")
