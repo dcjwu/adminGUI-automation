@@ -1,9 +1,13 @@
 __January 2023.__ First python experience.
 
+Get into working directory and then build an image:
+
 ```bash
-pipenv install
-pipenv run python main.py
+cd ...
+make up
 ```
 
-
-#### Status — IN PROGRESS.
+After first job, run app using:
+```bash
+make start
+```

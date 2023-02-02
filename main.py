@@ -1,50 +1,55 @@
-import asyncio
 import os
+from asyncio import run
+
 import aiohttp
-from datetime import datetime
 
-from app.telegram.telegram import Telegram
-from app.logger.logger import Logger, LoggerType
-from app.google_sheets.google_sheets import GoogleSheets
-from app.admin_panel.admin_panel import AdminPanel
+from app.admin_panel import AdminPanel
+from app.browser import Browser
+from app.google_sheets import GoogleSheets
+from app.logger import Logger, LoggerType
+from app.notifier import Notifier
+from app.user_input import ColumnType, UserInput
+from app.utility import Utility
 
-tg = Telegram(os.getenv("TG_TOKEN"), os.getenv("TG_CHAT"))
+tg = Notifier(os.getenv('TG_TOKEN'), os.getenv('TG_CHAT'))
+user_input = UserInput()
+utility = Utility()
+logger = Logger()
+browser = Browser()
 
 
 async def main():
-    key = input("Please, enter Google Sheet ID: ")
+    gs_id = user_input.get_default_input('Please, enter Google Sheet ID: ')
 
-    gs = GoogleSheets(key)
+    gs = GoogleSheets(gs_id)
     gs.connect()
 
-    column = gs.user_input_column_handler("Please, enter INPUT column letter: ")
-    gs.get_destination_column()
+    input_column = user_input.get_column(ColumnType.INPUT)
+    output_column = user_input.get_column(ColumnType.OUTPUT)
 
-    program_start_time = datetime.now()
+    gs.set_output_column(output_column)
 
-    [count, values] = gs.get_values(column)
-    Logger.log(LoggerType.LOG, f"Got {count} values from column {column}.")
-    if count != len(values):
-        Logger.log(LoggerType.WARN, "It seems like some rows in the column are empty.")
-    #
-    admin = AdminPanel(aiohttp.ClientSession())
-    admin.get_url()
+    values = gs.get_column_data(input_column)
 
-    Logger.log(LoggerType.LOG, "Logging in, please wait...")
-
-    await admin.get_auth_token()
+    admin_url = user_input.get_admin_url()
+    admin = AdminPanel(aiohttp.ClientSession(), admin_url)
     await admin.login()
 
-    for index, uid in enumerate(values):
-        Logger.log(LoggerType.LOG, f"Handling job {index + 1} of {len(values)}...", None, True)
-        return_url = await admin.get_return_url(uid)
-        redirect_list = await admin.get_redirects(return_url)
-        gs.write_to_sheet(index, redirect_list)
-        if index+1 == len(values):
-            await admin.disconnect()
-            program_end_time = datetime.now()
-            Logger.log(LoggerType.WARN, "Program duration: {}".format(program_end_time - program_start_time), None, True)
+    start_time = utility.get_time()
+
+    for index, tx_id in enumerate(values):
+        Logger.log(LoggerType.LOG, f'Handling job {index + 1} of {len(values)}...', None, True)
+
+        return_url = await admin.get_return_url(tx_id)
+        redirect_list = await admin.get_redirect_list(return_url)
+        gs.write_data(index, redirect_list)
+
+        if index + 1 == len(values):
+            end_time = utility.get_time()
+            logger.log(LoggerType.DONE, 'Program duration: {}'.format(end_time - start_time) + ' :)', None, True)
+            browser.quit()
+            await admin.exit()
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+if __name__ == '__main__':
+    run(main())
