@@ -63,8 +63,8 @@ class AdminPanel:
                     await self.exit()
 
                 user = user_html.text
-                if user == os.getenv('USR'):
-                # if f'"{user}"' == os.getenv('USR'):
+                # if user == os.getenv('USR'):
+                if f'"{user}"' == os.getenv('USR'):
                     Logger.log(LoggerType.DONE, 'Logged in successfully.')
 
                 else:
