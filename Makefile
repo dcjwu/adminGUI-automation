@@ -1,15 +1,11 @@
 requirements:
 	pipenv requirements > requirements.txt
 
-build-image:
+build:
 	docker build -t admin_script:latest .
 
 run:
-	docker run --name=script_container --env-file .env -it admin_script:latest
+	docker run --name=script_container --env-file .env -it --rm admin_script:latest
 
-start:
-	docker start -i script_container
+.PHONY: requirements build run
 
-up: build-image run
-
-.PHONY: requirements build-image run up

@@ -2,10 +2,12 @@ Get into working directory and then build an image:
 
 ```bash
 cd ...
-make up
+make build
 ```
 
-After first run, start a container using:
+Start a container using:
 ```bash
-make start
+make run
 ```
+
+### No need to build container again until .env or source code is changed!
